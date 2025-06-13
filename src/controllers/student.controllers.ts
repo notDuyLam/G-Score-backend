@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Student } from "../models/student.model";
 import { Op, Sequelize } from "sequelize";
 import { parse } from "csv-parse/sync";
+import { sequelize } from "../config/db";
 
 export const findStudentByRegNumber = async (
   req: Request,
@@ -61,10 +62,24 @@ export const getTop10ByGroup = async (
     });
   }
 };
-
-function parseNullableFloat(value: string): number | null {
+function parseNullableFloat(value: string | null): number | null {
+  if (!value) return null;
   const num = parseFloat(value);
   return isNaN(num) ? null : num;
+}
+
+interface StudentRecord {
+  sbd: string;
+  toan: number | null;
+  ngu_van: number | null;
+  ngoai_ngu: number | null;
+  vat_li: number | null;
+  hoa_hoc: number | null;
+  sinh_hoc: number | null;
+  lich_su: number | null;
+  dia_li: number | null;
+  gdcd: number | null;
+  ma_ngoai_ngu: string | null;
 }
 
 export const importStudentCsv = async (req: Request, res: Response) => {
@@ -83,37 +98,143 @@ export const importStudentCsv = async (req: Request, res: Response) => {
       rtrim: true,
     });
 
-    console.log("First row columns:", Object.keys(records[0])); // Debug: see actual column names
+    if (records.length === 0) {
+      return res.status(400).json({ error: "No valid records found in CSV" });
+    }
 
-    for (const row of records) {
-      // Try multiple possible column names for sbd
-      const sbd = (row["sbd"] || "").toString().trim();
+    // Pre-compile regex and optimize string operations
+    const cleanValue = (val: string | null | undefined): string | null => {
+      if (!val || val === "") return null;
+      return val.toString().trim() || null;
+    };
 
-      if (!sbd) {
-        console.warn("⚠️ Missing or empty sbd in row:", row);
-        continue;
+    // Batch process data transformation
+    const validRecords: StudentRecord[] = [];
+    const PROCESS_BATCH_SIZE = 10000; // Process in larger chunks
+
+    for (let i = 0; i < records.length; i += PROCESS_BATCH_SIZE) {
+      const chunk = records.slice(i, i + PROCESS_BATCH_SIZE);
+
+      const processedChunk = chunk
+        .map((row: any): StudentRecord | null => {
+          const sbd = cleanValue(row["sbd"] || row["'sbd'"]);
+          if (!sbd) return null;
+
+          return {
+            sbd,
+            toan:
+              parseNullableFloat(cleanValue(row["toan"] || row["'toan'"])) ??
+              null,
+            ngu_van:
+              parseNullableFloat(
+                cleanValue(row["ngu_van"] || row["'ngu_van'"])
+              ) ?? null,
+            ngoai_ngu:
+              parseNullableFloat(
+                cleanValue(row["ngoai_ngu"] || row["'ngoai_ngu'"])
+              ) ?? null,
+            vat_li:
+              parseNullableFloat(
+                cleanValue(row["vat_li"] || row["'vat_li'"])
+              ) ?? null,
+            hoa_hoc:
+              parseNullableFloat(
+                cleanValue(row["hoa_hoc"] || row["'hoa_hoc'"])
+              ) ?? null,
+            sinh_hoc:
+              parseNullableFloat(
+                cleanValue(row["sinh_hoc"] || row["'sinh_hoc'"])
+              ) ?? null,
+            lich_su:
+              parseNullableFloat(
+                cleanValue(row["lich_su"] || row["'lich_su'"])
+              ) ?? null,
+            dia_li:
+              parseNullableFloat(
+                cleanValue(row["dia_li"] || row["'dia_li'"])
+              ) ?? null,
+            gdcd:
+              parseNullableFloat(cleanValue(row["gdcd"] || row["'gdcd'"])) ??
+              null,
+            ma_ngoai_ngu: cleanValue(
+              row["ma_ngoai_ngu"] || row["'ma_ngoai_ngu'"]
+            ),
+          };
+        })
+        .filter(
+          (item: StudentRecord | null): item is StudentRecord => item !== null
+        );
+
+      validRecords.push(...processedChunk);
+    }
+
+    // Optimize SQL generation
+    const BATCH_SIZE = 5000; // Larger batch size
+    let processedCount = 0;
+
+    // Pre-compile helper functions
+    const escapeString = (val: string | null): string =>
+      val ? `'${val.replace(/'/g, "''")}'` : "NULL";
+    const formatNumber = (val: number | null): string =>
+      val !== null ? val.toString() : "NULL";
+
+    // Process in batches without excessive logging
+    const totalBatches = Math.ceil(validRecords.length / BATCH_SIZE);
+
+    for (let i = 0; i < validRecords.length; i += BATCH_SIZE) {
+      const batch = validRecords.slice(i, i + BATCH_SIZE);
+      const currentBatch = Math.floor(i / BATCH_SIZE) + 1;
+
+      // Build VALUES clause more efficiently
+      const valueStrings: string[] = [];
+      for (const record of batch) {
+        valueStrings.push(
+          `('${record.sbd}', ${formatNumber(record.toan)}, ${formatNumber(
+            record.ngu_van
+          )}, ${formatNumber(record.ngoai_ngu)}, ${formatNumber(
+            record.vat_li
+          )}, ${formatNumber(record.hoa_hoc)}, ${formatNumber(
+            record.sinh_hoc
+          )}, ${formatNumber(record.lich_su)}, ${formatNumber(
+            record.dia_li
+          )}, ${formatNumber(record.gdcd)}, ${escapeString(
+            record.ma_ngoai_ngu
+          )})`
+        );
       }
 
-      console.log("✅ Processing student with sbd:", sbd); // Debug log
+      const sql = `
+        INSERT INTO "Student" (sbd, toan, ngu_van, ngoai_ngu, vat_li, hoa_hoc, sinh_hoc, lich_su, dia_li, gdcd, ma_ngoai_ngu)
+        VALUES ${valueStrings.join(",")}
+        ON CONFLICT (sbd) DO UPDATE SET
+          toan = EXCLUDED.toan,
+          ngu_van = EXCLUDED.ngu_van,
+          ngoai_ngu = EXCLUDED.ngoai_ngu,
+          vat_li = EXCLUDED.vat_li,
+          hoa_hoc = EXCLUDED.hoa_hoc,
+          sinh_hoc = EXCLUDED.sinh_hoc,
+          lich_su = EXCLUDED.lich_su,
+          dia_li = EXCLUDED.dia_li,
+          gdcd = EXCLUDED.gdcd,
+          ma_ngoai_ngu = EXCLUDED.ma_ngoai_ngu
+      `;
 
-      await Student.upsert({
-        sbd: row["sbd"],
-        toan: parseNullableFloat(row["toan"]) ?? undefined,
-        ngu_van: parseNullableFloat(row["ngu_van"]) ?? undefined,
-        ngoai_ngu: parseNullableFloat(row["ngoai_ngu"]) ?? undefined,
-        vat_li: parseNullableFloat(row["vat_li"]) ?? undefined,
-        hoa_hoc: parseNullableFloat(row["hoa_hoc"]) ?? undefined,
-        sinh_hoc: parseNullableFloat(row["sinh_hoc"]) ?? undefined,
-        lich_su: parseNullableFloat(row["lich_su"]) ?? undefined,
-        dia_li: parseNullableFloat(row["dia_li"]) ?? undefined,
-        gdcd: parseNullableFloat(row["gdcd"]) ?? undefined,
-        ma_ngoai_ngu: row["ma_ngoai_ngu"],
-      });
+      await sequelize.query(sql);
+      processedCount += batch.length;
+
+      // Only log every 10 batches or on completion
+      if (currentBatch % 10 === 0 || currentBatch === totalBatches) {
+        console.log(
+          `✅ Batch ${currentBatch}/${totalBatches} - Processed ${processedCount}/${validRecords.length} records`
+        );
+      }
     }
 
     return res.status(200).json({
       message: "Import successful",
-      importedCount: records.length,
+      importedCount: processedCount,
+      totalRecords: records.length,
+      skippedRecords: records.length - processedCount,
     });
   } catch (error: any) {
     console.error("CSV import error:", error);
