@@ -275,10 +275,10 @@ export const numberOfStudentByLevel = async (
 
     // Count students grouped by score ranges
     const ranges = [
-      { label: ">=8", min: 8, max: 10 },
-      { label: ">=6 and <8", min: 6, max: 8 },
-      { label: ">=4 and <6", min: 4, max: 6 },
       { label: "<4", min: -Infinity, max: 4 },
+      { label: ">=4 and <6", min: 4, max: 6 },
+      { label: ">=6 and <8", min: 6, max: 8 },
+      { label: ">=8", min: 8, max: 10 },
     ];
 
     const counts = await Promise.all(
