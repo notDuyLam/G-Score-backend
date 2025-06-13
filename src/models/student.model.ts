@@ -1,55 +1,61 @@
-import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/db';
+import { DataTypes, Model } from "sequelize";
+import { sequelize } from "../config/db";
 
 export interface StudentAttributes {
-  id: string;
-  Toan?: number;
-  NguVan?: number;
-  NgoaiNgu?: number;
-  MaNgoaiNgu?: number;
-  VatLi?: number;
-  HoaHoc?: number;
-  SinhHoc?: number;
-  LichSu?: number;
-  DiaLi?: number;
-  GDCD?: number;
+  sbd: string;
+  toan?: number;
+  ngu_van?: number;
+  ngoai_ngu?: number;
+  vat_li?: number;
+  hoa_hoc?: number;
+  sinh_hoc?: number;
+  lich_su?: number;
+  dia_li?: number;
+  gdcd?: number;
+  ma_ngoai_ngu?: string;
 }
 
-export class Student extends Model<StudentAttributes> implements StudentAttributes {
-  public id!: string;
-  public Toan?: number;
-  public NguVan?: number;
-  public NgoaiNgu?: number;
-  public MaNgoaiNgu?: number;
-  public VatLi?: number;
-  public HoaHoc?: number;
-  public SinhHoc?: number;
-  public LichSu?: number;
-  public DiaLi?: number;
-  public GDCD?: number;
-
+export class Student
+  extends Model<StudentAttributes>
+  implements StudentAttributes
+{
+  public sbd!: string;
+  public toan?: number;
+  public ngu_van?: number;
+  public ngoai_ngu?: number;
+  public vat_li?: number;
+  public hoa_hoc?: number;
+  public sinh_hoc?: number;
+  public lich_su?: number;
+  public dia_li?: number;
+  public gdcd?: number;
+  public ma_ngoai_ngu?: string;
 }
 
-Student.init({
-  id: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    primaryKey: true
+Student.init(
+  {
+    sbd: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      primaryKey: true,
+    },
+    toan: DataTypes.FLOAT,
+    ngu_van: DataTypes.FLOAT,
+    ngoai_ngu: DataTypes.FLOAT,
+
+    vat_li: DataTypes.FLOAT,
+    hoa_hoc: DataTypes.FLOAT,
+    sinh_hoc: DataTypes.FLOAT,
+    lich_su: DataTypes.FLOAT,
+    dia_li: DataTypes.FLOAT,
+    gdcd: DataTypes.FLOAT,
+    ma_ngoai_ngu: DataTypes.STRING,
   },
-  Toan: DataTypes.FLOAT,
-  NguVan: DataTypes.FLOAT,
-  NgoaiNgu: DataTypes.FLOAT,
-  MaNgoaiNgu: DataTypes.INTEGER,
-  VatLi: DataTypes.FLOAT,
-  HoaHoc: DataTypes.FLOAT,
-  SinhHoc: DataTypes.FLOAT,
-  LichSu: DataTypes.FLOAT,
-  DiaLi: DataTypes.FLOAT,
-  GDCD: DataTypes.FLOAT
-}, {
-  sequelize,
-  tableName: 'Student',
-  timestamps: false
-});
+  {
+    sequelize,
+    tableName: "Student",
+    timestamps: false,
+  }
+);
 
 export default Student;
