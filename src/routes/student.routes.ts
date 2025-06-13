@@ -3,6 +3,7 @@ import {
   findStudentByRegNumber,
   getTop10ByGroup,
   importStudentCsv,
+  numberOfStudentByLevel,
 } from "../controllers/student.controllers";
 import { upload } from "../middlewares/upload";
 import cors from "cors";
@@ -27,6 +28,8 @@ router.post("/import", upload.single("file"), async (req, res, next) => {
 router.get("/:regNumber", findStudentByRegNumber);
 
 router.get("/group/:group", getTop10ByGroup);
+
+router.get("/counts/:subject", numberOfStudentByLevel);
 
 router.get("/", (req, res) => {
   res.send("You have accessed the student route");

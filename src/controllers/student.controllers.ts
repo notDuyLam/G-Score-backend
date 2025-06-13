@@ -225,7 +225,7 @@ export const importStudentCsv = async (req: Request, res: Response) => {
       // Only log every 10 batches or on completion
       if (currentBatch % 10 === 0 || currentBatch === totalBatches) {
         console.log(
-          `✅ Batch ${currentBatch}/${totalBatches} - Processed ${processedCount}/${validRecords.length} records`
+          `Batch ${currentBatch}/${totalBatches} - Processed ${processedCount}/${validRecords.length} records`
         );
       }
     }
@@ -241,6 +241,67 @@ export const importStudentCsv = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "Import failed",
       details: error.message,
+    });
+  }
+};
+
+export const numberOfStudentByLevel = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { subject } = req.params;
+    if (!subject) {
+      res.status(400).json({ message: "Subject is required." });
+      return;
+    }
+
+    // Validate subject exists in Student model
+    const validSubjects = [
+      "toan",
+      "ngu_van",
+      "ngoai_ngu",
+      "vat_li",
+      "hoa_hoc",
+      "sinh_hoc",
+      "lich_su",
+      "dia_li",
+      "gdcd",
+    ];
+    if (!validSubjects.includes(subject)) {
+      res.status(400).json({ message: "Invalid subject." });
+      return;
+    }
+
+    // Count students grouped by score ranges
+    const ranges = [
+      { label: ">=8", min: 8, max: 10 },
+      { label: ">=6 and <8", min: 6, max: 8 },
+      { label: ">=4 and <6", min: 4, max: 6 },
+      { label: "<4", min: -Infinity, max: 4 },
+    ];
+
+    const counts = await Promise.all(
+      ranges.map(async (range) => {
+        const where: any = {};
+        if (range.min !== -Infinity) where[subject] = { [Op.gte]: range.min };
+        if (range.max !== 10) {
+          where[subject] = {
+            ...(where[subject] || {}),
+            [Op.lt]: range.max,
+          };
+        }
+        return {
+          label: range.label,
+          count: await Student.count({ where }),
+        };
+      })
+    );
+    res.json({ counts });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error.",
+      error: (error as Error).message,
     });
   }
 };
