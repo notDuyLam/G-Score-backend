@@ -5,8 +5,16 @@ import {
   importStudentCsv,
 } from "../controllers/student.controllers";
 import { upload } from "../middlewares/upload";
+import cors from "cors";
 
 const router = Router();
+
+// Allow frontend to access the routes
+router.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 router.post("/import", upload.single("file"), async (req, res, next) => {
   try {

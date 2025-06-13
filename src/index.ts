@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { sequelize } from "./config/db";
 import "./models/student.model";
+import cors from "cors";
 import studentRoutes from "./routes/student.routes";
 
 dotenv.config();
@@ -11,6 +12,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use("/api", studentRoutes);
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 sequelize.sync().then(() => {
   console.log("Database synced!");
