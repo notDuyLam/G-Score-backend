@@ -2,6 +2,10 @@
 
 A Node.js/TypeScript backend application for managing and analyzing Vietnamese high school exam scores (THPT). This API provides endpoints for importing CSV data, retrieving student information, and generating statistical reports.
 
+## 🖥️ Demo
+
+A live demo of the API is available at: [https://g-score-backend-ut59.onrender.com/](https://g-score-backend-ut59.onrender.com/)
+
 ## 🚀 Features
 
 - **CSV Data Import**: Bulk import student exam scores from CSV files

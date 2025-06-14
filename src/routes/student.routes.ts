@@ -11,11 +11,6 @@ import { upload } from "../middlewares/upload";
 const router = Router();
 
 // Allow frontend to access the routes
-router.use(
-  cors({
-    origin: "http://localhost:5173",
-  })
-);
 
 router.post("/import", upload.single("file"), async (req, res, next) => {
   try {
