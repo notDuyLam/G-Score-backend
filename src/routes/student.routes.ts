@@ -1,11 +1,9 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express"; // Add Request, Response types
 import {
   findStudentByRegNumber,
   getTop10ByGroup,
-  importStudentCsv,
   numberOfStudentByLevel,
 } from "../controllers/student.controllers";
-import { upload } from "../middlewares/upload";
 import cors from "cors";
 
 const router = Router();
@@ -17,21 +15,14 @@ router.use(
   })
 );
 
-router.post("/import", upload.single("file"), async (req, res, next) => {
-  try {
-    await importStudentCsv(req, res);
-  } catch (err) {
-    next(err);
-  }
-});
-
 router.get("/:regNumber", findStudentByRegNumber);
 
 router.get("/group/:group", getTop10ByGroup);
 
 router.get("/counts/:subject", numberOfStudentByLevel);
 
-router.get("/", (req, res) => {
+router.get("/", (req: Request, res: Response) => {
+  // Add types
   res.send("You have accessed the student route");
 });
 

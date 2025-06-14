@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { sequelize } from "./config/db";
 import "./models/student.model";
@@ -45,11 +45,13 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-app.get("/", (_req, res) => {
+app.get("/", (_req: Request, res: Response) => {
+  // Add types
   res.json({ message: "G-Score API is running", status: "healthy" });
 });
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
+  // Add types
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
