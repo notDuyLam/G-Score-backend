@@ -186,7 +186,7 @@ module.exports = {
       totalInserted / (totalDuration / 1000)
     );
 
-    console.log(`🎉 CSV import seeding completed successfully!`);
+    console.log(`CSV import seeding completed successfully!`);
     console.log(
       `Total insertion time: ${(totalDuration / 1000).toFixed(2)} seconds`
     );
