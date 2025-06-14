@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "npm run seed:auto && node dist/index.js",
     "build": "tsc",
     "dev": "ts-node src/index.ts",
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "npx sequelize-cli db:seed:all",
-    "postbuild": "npm run migrate"
+    "postbuild": "npm run migrate",
+    "seed:auto": "if [ \"$RUN_SEED\" = \"true\" ]; then npm run seed; fi"
   },
   "keywords": [],
   "author": "",
