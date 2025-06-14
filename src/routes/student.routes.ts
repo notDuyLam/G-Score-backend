@@ -3,8 +3,10 @@ import {
   findStudentByRegNumber,
   getTop10ByGroup,
   numberOfStudentByLevel,
+  importStudentCsv,
 } from "../controllers/student.controllers";
 import cors from "cors";
+import { upload } from "../middlewares/upload";
 
 const router = Router();
 
@@ -14,6 +16,14 @@ router.use(
     origin: "http://localhost:5173",
   })
 );
+
+router.post("/import", upload.single("file"), async (req, res, next) => {
+  try {
+    await importStudentCsv(req, res);
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get("/:regNumber", findStudentByRegNumber);
 
