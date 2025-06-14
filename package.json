@@ -4,18 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev src/index.ts",
+       "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
     "migrate": "npx sequelize-cli db:migrate",
-    "migrate:undo": "npx sequelize-cli db:migrate:undo",
-    "migrate:undo:all": "npx sequelize-cli db:migrate:undo:all",
-    "migrate:status": "npx sequelize-cli db:migrate:status",
-    "migration:generate": "npx sequelize-cli migration:generate --name",
     "seed": "npx sequelize-cli db:seed:all",
-    "seed:undo": "npx sequelize-cli db:seed:undo",
-    "seed:undo:all": "npx sequelize-cli db:seed:undo:all",
-    "seed:status": "npx sequelize-cli db:seed:status",
-    "seed:specific": "npx sequelize-cli db:seed --seed"
+    "postbuild": "npm run migrate"
   },
   "keywords": [],
   "author": "",
